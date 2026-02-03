@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Jogo dos Livros – Bíblia & Livro de Mórmon</title>
+  <title>Escritura ou Música?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     * {
@@ -10,104 +11,111 @@
     }
 
     body {
+      margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
       background: radial-gradient(circle at top, #1a1a1a, #000);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      padding: 16px;
     }
 
     .game {
       background: #1c1c1c;
-      padding: 32px;
-      width: 360px;
-      border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 20px;
+      border-radius: 14px;
       text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.6);
     }
 
     h1 {
       font-size: 18px;
-      margin-bottom: 20px;
-      font-weight: 600;
+      margin-bottom: 16px;
     }
 
-    .btn-show {
+    .btn-start {
       width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      padding: 14px;
       background: #6a5acd;
       color: #fff;
-      margin-bottom: 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-bottom: 20px;
     }
 
-    .letters {
-      font-size: 26px;
-      letter-spacing: 6px;
-      margin-bottom: 16px;
-      min-height: 32px;
+    .phrase {
+      min-height: 96px;
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      font-style: italic;
+      padding: 0 4px;
     }
 
-    .hint {
-      font-size: 14px;
-      opacity: 0.8;
-      min-height: 18px;
-      margin-bottom: 16px;
-    }
-
-    .answer-group {
+    .choices {
       display: flex;
       flex-direction: column;
       gap: 12px;
       margin-bottom: 16px;
     }
 
-    .answer-group input,
-    .answer-group button {
+    .choices button {
       width: 100%;
-      height: 44px;
-      font-size: 16px;
-      border-radius: 6px;
+      height: 56px;
       border: none;
-    }
-
-    .answer-group input {
-      padding: 0 12px;
-    }
-
-    .answer-group button {
+      border-radius: 12px;
+      background: #333;
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
       cursor: pointer;
-      background: #2ecc71;
-      color: #000;
-      font-weight: 600;
     }
 
     .helpers {
       display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .helpers button {
       flex: 1;
-      height: 38px;
-      font-size: 13px;
-      border-radius: 6px;
+      height: 44px;
+      border-radius: 10px;
       border: none;
-      cursor: pointer;
-      background: #333;
+      background: #444;
       color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .hint {
+      font-size: 13px;
+      opacity: 0.7;
+      min-height: 18px;
+      margin-bottom: 8px;
     }
 
     .feedback {
-      min-height: 20px;
+      min-height: 22px;
       font-weight: bold;
+      font-size: 15px;
+    }
+
+    /* 💻 Ajustes para telas maiores */
+    @media (min-width: 600px) {
+      .choices {
+        flex-direction: row;
+      }
+
+      .choices button {
+        height: 52px;
+      }
     }
   </style>
 </head>
@@ -115,107 +123,107 @@
 <body>
 
   <div class="game">
-    <h1>Descubra o Livro 📖</h1>
+    <h1>Quem disse isso? 🤔</h1>
 
-    <button class="btn-show" onclick="mostrarLetras()">
-      Mostrar letras
-    </button>
+    <button class="btn-start" onclick="iniciarJogo()">Iniciar jogo</button>
 
-    <div class="letters" id="letters"></div>
-    <div class="hint" id="hint"></div>
+    <div class="phrase" id="phrase"></div>
 
-    <div class="answer-group">
-      <input
-        type="text"
-        id="answer"
-        placeholder="Digite o nome do livro"
-        onkeydown="if(event.key === 'Enter') verificarResposta()"
-      />
-      <button onclick="verificarResposta()">OK</button>
+    <div class="choices">
+      <button id="btnA" onclick="responder('A')"></button>
+      <button id="btnB" onclick="responder('B')"></button>
     </div>
 
     <div class="helpers">
       <button onclick="mostrarDica()">Dica</button>
-      <button onclick="revelarLivro()">Revelar</button>
+      <button onclick="revelar()">Revelar</button>
     </div>
 
+    <div class="hint" id="hint"></div>
     <div class="feedback" id="feedback"></div>
   </div>
 
   <script>
-    const livros = [
-      "Gênesis","Êxodo","Levítico","Números","Deuteronômio",
-      "Josué","Juízes","Rute","1 Samuel","2 Samuel",
-      "1 Reis","2 Reis","1 Crônicas","2 Crônicas",
-      "Esdras","Neemias","Ester","Jó","Salmos","Provérbios",
-      "Eclesiastes","Cantares","Isaías","Jeremias","Lamentações",
-      "Ezequiel","Daniel","Oseias","Joel","Amós","Obadias",
-      "Jonas","Miquéias","Naum","Habacuque","Sofonias",
-      "Ageu","Zacarias","Malaquias",
-      "Mateus","Marcos","Lucas","João","Atos",
-      "Romanos","1 Coríntios","2 Coríntios","Gálatas",
-      "Efésios","Filipenses","Colossenses",
-      "1 Tessalonicenses","2 Tessalonicenses",
-      "1 Timóteo","2 Timóteo","Tito","Filemom",
-      "Hebreus","Tiago","1 Pedro","2 Pedro",
-      "1 João","2 João","3 João","Judas","Apocalipse",
-      "1 Néfi","2 Néfi","Jacó","Enos","Jarom",
-      "Ômni","Palavras de Mórmon","Mosias","Alma",
-      "Helamã","3 Néfi","4 Néfi","Mórmon","Éter","Morôni"
+    const frases = [
+      {
+        texto: "A voz do que clama no deserto: preparai o caminho do Senhor.",
+        correta: "A",
+        A: "João Batista",
+        B: "U2",
+        dica: "Mensagem de preparação espiritual"
+      },
+      {
+        texto: "Tudo o que tenho, tudo o que sou, coloco aos teus pés.",
+        correta: "B",
+        A: "Apóstolo Paulo",
+        B: "Hillsong Worship",
+        dica: "Entrega e adoração"
+      },
+      {
+        texto: "O Senhor é minha luz e minha salvação; a quem temerei?",
+        correta: "A",
+        A: "Davi",
+        B: "Coldplay",
+        dica: "Confiança e proteção"
+      },
+      {
+        texto: "Mesmo quando eu não sinto, Ele está trabalhando.",
+        correta: "B",
+        A: "Isaías",
+        B: "Elevation Worship",
+        dica: "Mensagem moderna de fé"
+      },
+      {
+        texto: "Onde está o teu tesouro, aí estará também o teu coração.",
+        correta: "A",
+        A: "Jesus Cristo",
+        B: "Bob Dylan",
+        dica: "Prioridades"
+      },
+      {
+        texto: "No silêncio, eu encontro a verdade que me sustenta.",
+        correta: "B",
+        A: "Salomão",
+        B: "Leonardo Gonçalves",
+        dica: "Reflexão contemporânea"
+      }
     ];
 
-    let livrosDisponiveis = [...livros];
-    let livroAtual = "";
+    let atual = null;
 
-    function embaralhar(texto) {
-      return texto
-        .replace(/\s/g, "")
-        .split("")
-        .sort(() => Math.random() - 0.5)
-        .join("")
-        .toUpperCase();
-    }
-
-    function mostrarLetras() {
-      if (livrosDisponiveis.length === 0) {
-        document.getElementById("letters").textContent = "Fim do jogo 🎉";
-        return;
-      }
-
-      const index = Math.floor(Math.random() * livrosDisponiveis.length);
-      livroAtual = livrosDisponiveis.splice(index, 1)[0];
-
-      document.getElementById("letters").textContent = embaralhar(livroAtual);
-      document.getElementById("answer").value = "";
-      document.getElementById("feedback").textContent = "";
+    function iniciarJogo() {
+      atual = frases[Math.floor(Math.random() * frases.length)];
+      document.getElementById("phrase").textContent = `"${atual.texto}"`;
+      document.getElementById("btnA").textContent = atual.A;
+      document.getElementById("btnB").textContent = atual.B;
       document.getElementById("hint").textContent = "";
-      document.getElementById("answer").focus();
+      document.getElementById("feedback").textContent = "";
     }
 
-    function verificarResposta() {
-      if (!livroAtual) return;
+    function responder(opcao) {
+      if (!atual) return;
 
-      const resposta = document.getElementById("answer").value.trim().toLowerCase();
-      const correta = livroAtual.toLowerCase();
-
-      document.getElementById("feedback").textContent =
-        resposta === correta
-          ? "✅ Acertou!"
-          : "❌ Errou! Tente novamente ou use uma dica.";
+      if (opcao === atual.correta) {
+        document.getElementById("feedback").textContent = "✅ Acertou!";
+      } else {
+        document.getElementById("feedback").textContent =
+          "❌ Não é isso. Tente novamente.";
+      }
     }
 
     function mostrarDica() {
-      if (!livroAtual) return;
-      document.getElementById("hint").textContent =
-        "Dica: começa com \"" + livroAtual.charAt(0) + "\"";
+      if (!atual) return;
+      document.getElementById("hint").textContent = "Dica: " + atual.dica;
     }
 
-    function revelarLivro() {
-      if (!livroAtual) return;
+    function revelar() {
+      if (!atual) return;
       document.getElementById("feedback").textContent =
-        "📖 O livro era: " + livroAtual;
+        "✔️ Quem disse foi: " + (atual.correta === "A" ? atual.A : atual.B);
     }
   </script>
 
 </body>
 </html>
+
+
