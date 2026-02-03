@@ -2,13 +2,11 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Escritura ou Música?</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo dos Livros – Bíblia & Livro de Mórmon</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -23,10 +21,10 @@
     }
 
     .game {
-      background: #1c1c1c;
       width: 100%;
       max-width: 420px;
-      padding: 24px 20px;
+      background: #1c1c1c;
+      padding: 22px 18px;
       border-radius: 14px;
       text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.6);
@@ -34,88 +32,101 @@
 
     h1 {
       font-size: 18px;
-      margin-bottom: 16px;
+      margin: 0 0 14px 0;
+      font-weight: 700;
     }
 
-    .btn-start {
+    .btn-show {
       width: 100%;
-      padding: 14px;
+      height: 50px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
       background: #6a5acd;
       color: #fff;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
       font-size: 15px;
-      margin-bottom: 20px;
+      font-weight: 700;
+      margin-bottom: 18px;
     }
 
-    .phrase {
-      min-height: 96px;
-      font-size: 18px;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      font-style: italic;
-      padding: 0 4px;
+    .letters {
+      font-size: 24px;
+      letter-spacing: 6px;
+      margin: 0 0 10px 0;
+      min-height: 34px;
+      word-break: break-word;
     }
 
-    .choices {
+    .hint {
+      font-size: 13px;
+      opacity: 0.75;
+      min-height: 18px;
+      margin-bottom: 14px;
+    }
+
+    .answer-group {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
-    .choices button {
+    .answer-group input,
+    .answer-group button {
       width: 100%;
-      height: 56px;
-      border: none;
+      height: 50px;
       border-radius: 12px;
-      background: #333;
-      color: #fff;
-      font-size: 15px;
-      font-weight: bold;
+      border: none;
+      font-size: 16px;
+    }
+
+    .answer-group input {
+      padding: 0 14px;
+      outline: none;
+    }
+
+    .answer-group button {
+      background: #2ecc71;
+      color: #000;
+      font-weight: 800;
       cursor: pointer;
     }
 
     .helpers {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 12px;
     }
 
     .helpers button {
-      flex: 1;
       height: 44px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: none;
-      background: #444;
-      color: #fff;
       cursor: pointer;
+      background: #333;
+      color: #fff;
       font-size: 14px;
-    }
-
-    .hint {
-      font-size: 13px;
-      opacity: 0.7;
-      min-height: 18px;
-      margin-bottom: 8px;
+      font-weight: 700;
     }
 
     .feedback {
       min-height: 22px;
-      font-weight: bold;
+      font-weight: 800;
       font-size: 15px;
+      margin-top: 6px;
     }
 
-    /* 💻 Ajustes para telas maiores */
-    @media (min-width: 600px) {
-      .choices {
-        flex-direction: row;
-      }
+    .meta {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: 0.6;
+      min-height: 14px;
+    }
 
-      .choices button {
-        height: 52px;
-      }
+    @media (min-width: 600px) {
+      .game { padding: 28px 22px; }
+      .letters { font-size: 26px; }
     }
   </style>
 </head>
@@ -123,107 +134,155 @@
 <body>
 
   <div class="game">
-    <h1>Quem disse isso? 🤔</h1>
+    <h1>Descubra o Livro 📖</h1>
 
-    <button class="btn-start" onclick="iniciarJogo()">Iniciar jogo</button>
+    <button class="btn-show" onclick="mostrarLetras()">Mostrar letras</button>
 
-    <div class="phrase" id="phrase"></div>
+    <div class="letters" id="letters"></div>
+    <div class="hint" id="hint"></div>
 
-    <div class="choices">
-      <button id="btnA" onclick="responder('A')"></button>
-      <button id="btnB" onclick="responder('B')"></button>
+    <div class="answer-group">
+      <input
+        type="text"
+        id="answer"
+        placeholder="Digite o nome do livro"
+        autocomplete="off"
+        autocapitalize="words"
+        enterkeyhint="done"
+      />
+      <button onclick="verificarResposta()">OK</button>
     </div>
 
     <div class="helpers">
       <button onclick="mostrarDica()">Dica</button>
-      <button onclick="revelar()">Revelar</button>
+      <button onclick="revelarLivro()">Revelar</button>
     </div>
 
-    <div class="hint" id="hint"></div>
     <div class="feedback" id="feedback"></div>
+    <div class="meta" id="meta"></div>
   </div>
 
   <script>
-    const frases = [
-      {
-        texto: "A voz do que clama no deserto: preparai o caminho do Senhor.",
-        correta: "A",
-        A: "João Batista",
-        B: "U2",
-        dica: "Mensagem de preparação espiritual"
-      },
-      {
-        texto: "Tudo o que tenho, tudo o que sou, coloco aos teus pés.",
-        correta: "B",
-        A: "Apóstolo Paulo",
-        B: "Hillsong Worship",
-        dica: "Entrega e adoração"
-      },
-      {
-        texto: "O Senhor é minha luz e minha salvação; a quem temerei?",
-        correta: "A",
-        A: "Davi",
-        B: "Coldplay",
-        dica: "Confiança e proteção"
-      },
-      {
-        texto: "Mesmo quando eu não sinto, Ele está trabalhando.",
-        correta: "B",
-        A: "Isaías",
-        B: "Elevation Worship",
-        dica: "Mensagem moderna de fé"
-      },
-      {
-        texto: "Onde está o teu tesouro, aí estará também o teu coração.",
-        correta: "A",
-        A: "Jesus Cristo",
-        B: "Bob Dylan",
-        dica: "Prioridades"
-      },
-      {
-        texto: "No silêncio, eu encontro a verdade que me sustenta.",
-        correta: "B",
-        A: "Salomão",
-        B: "Leonardo Gonçalves",
-        dica: "Reflexão contemporânea"
-      }
+    const livros = [
+      // Bíblia (PT-BR)
+      "Gênesis","Êxodo","Levítico","Números","Deuteronômio",
+      "Josué","Juízes","Rute","1 Samuel","2 Samuel",
+      "1 Reis","2 Reis","1 Crônicas","2 Crônicas",
+      "Esdras","Neemias","Ester","Jó","Salmos","Provérbios",
+      "Eclesiastes","Cantares","Isaías","Jeremias","Lamentações",
+      "Ezequiel","Daniel","Oseias","Joel","Amós","Obadias",
+      "Jonas","Miquéias","Naum","Habacuque","Sofonias",
+      "Ageu","Zacarias","Malaquias",
+      "Mateus","Marcos","Lucas","João","Atos",
+      "Romanos","1 Coríntios","2 Coríntios","Gálatas",
+      "Efésios","Filipenses","Colossenses",
+      "1 Tessalonicenses","2 Tessalonicenses",
+      "1 Timóteo","2 Timóteo","Tito","Filemom",
+      "Hebreus","Tiago","1 Pedro","2 Pedro",
+      "1 João","2 João","3 João","Judas","Apocalipse",
+
+      // Livro de Mórmon
+      "1 Néfi","2 Néfi","Jacó","Enos","Jarom",
+      "Ômni","Palavras de Mórmon","Mosias","Alma",
+      "Helamã","3 Néfi","4 Néfi","Mórmon","Éter","Morôni"
     ];
 
-    let atual = null;
+    let livrosDisponiveis = [...livros];
+    let livroAtual = "";
+    let revelado = false;
 
-    function iniciarJogo() {
-      atual = frases[Math.floor(Math.random() * frases.length)];
-      document.getElementById("phrase").textContent = `"${atual.texto}"`;
-      document.getElementById("btnA").textContent = atual.A;
-      document.getElementById("btnB").textContent = atual.B;
-      document.getElementById("hint").textContent = "";
-      document.getElementById("feedback").textContent = "";
+    const elLetters = document.getElementById("letters");
+    const elAnswer = document.getElementById("answer");
+    const elFeedback = document.getElementById("feedback");
+    const elHint = document.getElementById("hint");
+    const elMeta = document.getElementById("meta");
+
+    // Enter no teclado = OK
+    elAnswer.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") verificarResposta();
+    });
+
+    function normalizar(texto) {
+      // remove acentos e deixa minúsculo
+      return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
-    function responder(opcao) {
-      if (!atual) return;
+    function embaralhar(texto) {
+      // embaralha letras ignorando espaços
+      const base = texto.replace(/\s/g, "");
+      return base
+        .split("")
+        .sort(() => Math.random() - 0.5)
+        .join("")
+        .toUpperCase();
+    }
 
-      if (opcao === atual.correta) {
-        document.getElementById("feedback").textContent = "✅ Acertou!";
+    function atualizarMeta() {
+      elMeta.textContent = `Restam ${livrosDisponiveis.length} livros.`;
+    }
+
+    function mostrarLetras() {
+      if (livrosDisponiveis.length === 0) {
+        elLetters.textContent = "Fim do jogo 🎉";
+        elFeedback.textContent = "";
+        elHint.textContent = "";
+        elMeta.textContent = "Você zerou todos! 👏";
+        livroAtual = "";
+        return;
+      }
+
+      const index = Math.floor(Math.random() * livrosDisponiveis.length);
+      livroAtual = livrosDisponiveis.splice(index, 1)[0];
+      revelado = false;
+
+      elLetters.textContent = embaralhar(livroAtual);
+      elAnswer.value = "";
+      elFeedback.textContent = "";
+      elHint.textContent = "";
+      atualizarMeta();
+
+      // foca no input (mobile pode abrir teclado)
+      setTimeout(() => elAnswer.focus(), 50);
+    }
+
+    function verificarResposta() {
+      if (!livroAtual) return;
+
+      const resposta = normalizar(elAnswer.value);
+      const correta = normalizar(livroAtual);
+
+      if (resposta === correta) {
+        elFeedback.textContent = "✅ Acertou!";
       } else {
-        document.getElementById("feedback").textContent =
-          "❌ Não é isso. Tente novamente.";
+        // Se já revelou, não fica chato: ainda assim deixa tentar
+        elFeedback.textContent = "❌ Errado. Tente novamente.";
       }
     }
 
     function mostrarDica() {
-      if (!atual) return;
-      document.getElementById("hint").textContent = "Dica: " + atual.dica;
+      if (!livroAtual) return;
+
+      // dica: primeira letra + quantidade de letras (sem espaços)
+      const semEspacos = livroAtual.replace(/\s/g, "");
+      const primeira = semEspacos.charAt(0);
+      elHint.textContent = `Dica: começa com "${primeira}" e tem ${semEspacos.length} letras.`;
     }
 
-    function revelar() {
-      if (!atual) return;
-      document.getElementById("feedback").textContent =
-        "✔️ Quem disse foi: " + (atual.correta === "A" ? atual.A : atual.B);
+    function revelarLivro() {
+      if (!livroAtual) return;
+      revelado = true;
+      elFeedback.textContent = `📖 Era: ${livroAtual}`;
     }
+
+    // estado inicial
+    atualizarMeta();
   </script>
 
 </body>
 </html>
-
 
